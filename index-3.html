@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>NEET JEE PrepAI 🚀</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:#0D0F1A;font-family:'Inter','Segoe UI',sans-serif;overflow-x:hidden;}
+    #root{min-height:100vh;}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+
+// ── Design Tokens ──────────────────────────────────────────────
+const C = {
+  bg: "#0D0F1A",
+  card: "#161927",
+  card2: "#1E2235",
+  border: "#2A2F4A",
+  accent: "#7C3AED",
+  accent2: "#A855F7",
+  gold: "#F59E0B",
+  green: "#10B981",
+  red: "#EF4444",
+  pink: "#EC4899",
+  cyan: "#06B6D4",
+  text: "#F1F5F9",
+  muted: "#94A3B8",
+  dim: "#475569",
+  physics: { a: "#7C3AED", b: "#A855F7" },
+  chemistry: { a: "#059669", b: "#10B981" },
+  biology: { a: "#DC2626", b: "#F87171" },
+  math: { a: "#D97706", b: "#FBBF24" },
+};
+
+const subjectMeta = {
+  Physics:    { emoji: "⚛️",  grad: `linear-gradient(135deg, ${C.physics.a}, ${C.physics.b})`,    topics: ["Mechanics","Thermodynamics","Waves","Optics","Electromagnetism","Modern Physics"] },
+  Chemistry:  { emoji: "🧪",  grad: `linear-gradient(135deg, ${C.chemistry.a}, ${C.chemistry.b})`, topics: ["Physical Chem","Organic Chem","Inorganic Chem","Chemical Bonding","Equilibrium","Electrochemistry"] },
+  Biology:    { emoji: "🧬",  grad: `linear-gradient(135deg, ${C.biology.a}, ${C.biology.b})`,     topics: ["Cell Biology","Genetics","Ecology","Human Physiology","Plant Biology","Evolution"] },
+  Mathematics:{ emoji: "📐",  grad: `linear-gradient(135deg, ${C.math.a}, ${C.math.b})`,           topics: ["Calculus","Algebra","Trigonometry","Coordinate Geometry","Vectors","Probability"] },
+};
+
+// ── Sample Questions ───────────────────────────────────────────
+const QUESTIONS = [
+  { id:1, subject:"Physics",    topic:"Mechanics",    q:"A ball is thrown vertically upward with velocity 20 m/s. What is the maximum height reached? (g = 10 m/s²)", opts:["10 m","20 m","30 m","40 m"], ans:1, exp:"Using v² = u² − 2gh → 0 = 400 − 20h → h = 20 m" },
+  { id:2, subject:"Chemistry",  topic:"Organic Chem", q:"Which of the following is NOT an isomer of C₄H₁₀?", opts:["n-Butane","Isobutane","2-Methylpropane","Cyclobutane"], ans:3, exp:"Cyclobutane has formula C₄H₈, not C₄H₁₀. n-Butane and isobutane (2-methylpropane) are both C₄H₁₀." },
+  { id:3, subject:"Biology",    topic:"Cell Biology", q:"The powerhouse of the cell is:", opts:["Nucleus","Ribosome","Mitochondria","Golgi Apparatus"], ans:2, exp:"Mitochondria are called the powerhouse of the cell because they produce ATP through cellular respiration." },
+  { id:4, subject:"Mathematics",topic:"Calculus",     q:"What is the derivative of sin(x)?", opts:["cos(x)","-cos(x)","sin(x)","-sin(x)"], ans:0, exp:"The derivative of sin(x) is cos(x). This is a fundamental calculus result." },
+  { id:5, subject:"Physics",    topic:"Optics",       q:"The speed of light in vacuum is approximately:", opts:["3×10⁶ m/s","3×10⁸ m/s","3×10¹⁰ m/s","3×10⁴ m/s"], ans:1, exp:"The speed of light in vacuum c ≈ 3×10⁸ m/s (299,792,458 m/s exactly)." },
+  { id:6, subject:"Chemistry",  topic:"Physical Chem",q:"pH of a solution with H⁺ concentration 10⁻⁷ M is:", opts:["7","3","11","0"], ans:0, exp:"pH = -log[H⁺] = -log(10⁻⁷) = 7. This is neutral pH at 25°C." },
+  { id:7, subject:"Biology",    topic:"Genetics",     q:"Which base pairs with Adenine in DNA?", opts:["Guanine","Cytosine","Thymine","Uracil"], ans:2, exp:"In DNA, Adenine pairs with Thymine (A-T pair) through 2 hydrogen bonds. Guanine pairs with Cytosine." },
+  { id:8, subject:"Mathematics",topic:"Algebra",      q:"If x² − 5x + 6 = 0, then x equals:", opts:["2, 3","1, 6","-2, -3","2, -3"], ans:0, exp:"Factoring: (x-2)(x-3) = 0, so x = 2 or x = 3." },
+];
+
+const FORMULAS = [
+  { subject:"Physics",    name:"Newton's 2nd Law",      formula:"F = ma",                    desc:"Force equals mass times acceleration" },
+  { subject:"Physics",    name:"Kinetic Energy",         formula:"KE = ½mv²",                 desc:"Energy due to motion of an object" },
+  { subject:"Physics",    name:"Ohm's Law",              formula:"V = IR",                    desc:"Voltage equals current times resistance" },
+  { subject:"Chemistry",  name:"Ideal Gas Law",          formula:"PV = nRT",                  desc:"Relates pressure, volume, temperature of ideal gas" },
+  { subject:"Chemistry",  name:"Molarity",               formula:"M = n/V",                   desc:"Moles of solute per liter of solution" },
+  { subject:"Mathematics",name:"Quadratic Formula",      formula:"x = (-b ± √(b²-4ac)) / 2a", desc:"Roots of quadratic equation ax²+bx+c=0" },
+  { subject:"Mathematics",name:"Integration by Parts",   formula:"∫u dv = uv − ∫v du",        desc:"Technique for integrating products of functions" },
+  { subject:"Biology",    name:"Hardy-Weinberg",         formula:"p² + 2pq + q² = 1",         desc:"Allele frequencies in a stable population" },
+];
+
+// ── Tiny helpers ───────────────────────────────────────────────
+const Pill = ({ label, active, onClick, color = C.accent }) => (
+  <button onClick={onClick} style={{
+    padding:"6px 16px", borderRadius:20, border:`1.5px solid ${active ? color : C.border}`,
+    background: active ? color : "transparent", color: active ? "#fff" : C.muted,
+    fontSize:13, fontWeight:600, cursor:"pointer", transition:"all .2s",
+  }}>{label}</button>
+);
+
+const Card = ({ children, style = {}, onClick }) => (
+  <div onClick={onClick} style={{
+    background: C.card, border:`1px solid ${C.border}`, borderRadius:16,
+    padding:16, ...style, cursor: onClick ? "pointer" : "default",
+    transition:"transform .15s, box-shadow .15s",
+  }}
+    onMouseEnter={e => { if(onClick){ e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow=`0 8px 24px rgba(124,58,237,.25)`; }}}
+    onMouseLeave={e => { e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; }}
+  >{children}</div>
+);
+
+const XPBadge = ({ xp }) => (
+  <span style={{ background:`linear-gradient(135deg,${C.gold},#FBBF24)`, borderRadius:12,
+    padding:"3px 10px", fontSize:12, fontWeight:700, color:"#000" }}>
+    ⭐ {xp} XP
+  </span>
+);
+
+function ProgressBar({ value, max, color = C.accent, height = 8 }) {
+  const pct = Math.min(100, Math.round((value/max)*100));
+  return (
+    <div style={{ background:C.border, borderRadius:height, height, overflow:"hidden" }}>
+      <div style={{ width:`${pct}%`, height:"100%", background:color,
+        borderRadius:height, transition:"width .6s cubic-bezier(.34,1.56,.64,1)" }} />
+    </div>
+  );
+}
+
+// ── Confetti ───────────────────────────────────────────────────
+function Confetti({ active }) {
+  const pieces = Array.from({length:30},(_,i)=>i);
+  if(!active) return null;
+  return (
+    <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:9999 }}>
+      {pieces.map(i=>(
+        <div key={i} style={{
+          position:"absolute", left:`${Math.random()*100}%`, top:"-10px",
+          width:8, height:8, borderRadius:Math.random()>0.5?"50%":"2px",
+          background:["#7C3AED","#F59E0B","#10B981","#EF4444","#06B6D4","#EC4899"][i%6],
+          animation:`confetti-fall ${1+Math.random()*2}s ease-in forwards`,
+          animationDelay:`${Math.random()*0.8}s`,
+        }} />
+      ))}
+      <style>{`@keyframes confetti-fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}`}</style>
+    </div>
+  );
+}
+
+// ── AI Doubt Solver ────────────────────────────────────────────
+function AIDoubtSolver() {
+  const [messages, setMessages] = useState([
+    { role:"assistant", content:"Hey! 👋 I'm **Aria**, your AI study buddy! Ask me anything about Physics, Chemistry, Biology, or Maths. I'll explain it in the coolest way possible! 🚀" }
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const endRef = useRef(null);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior:"smooth" }); }, [messages]);
+
+  const send = async () => {
+    if(!input.trim() || loading) return;
+    const userMsg = { role:"user", content: input };
+    const newMsgs = [...messages, userMsg];
+    setMessages(newMsgs);
+    setInput("");
+    setLoading(true);
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          model:"claude-sonnet-4-6",
+          max_tokens:1000,
+          system:`You are Aria, a fun and energetic AI study buddy for Indian students preparing for NEET and JEE exams (ages 16-19). You explain concepts in a clear, engaging, and slightly playful way. Use emojis occasionally, give step-by-step explanations, use analogies, and always end with an encouraging note. Keep answers concise but complete. Format math nicely with clear steps.`,
+          messages: newMsgs.map(m=>({ role:m.role, content:m.content }))
+        })
+      });
+      const data = await res.json();
+      const reply = data.content?.[0]?.text || "Hmm, I had a brain freeze! Try again? 🤔";
+      setMessages(prev => [...prev, { role:"assistant", content:reply }]);
+    } catch {
+      setMessages(prev => [...prev, { role:"assistant", content:"Oops! Network hiccup. Check your connection and try again! 🌐" }]);
+    }
+    setLoading(false);
+  };
+
+  const renderContent = (text) => {
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((p, i) =>
+      p.startsWith("**") ? <strong key={i}>{p.slice(2,-2)}</strong> : p
+    );
+  };
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", height:"100%" }}>
+      <div style={{ flex:1, overflowY:"auto", padding:"16px 0", display:"flex", flexDirection:"column", gap:12 }}>
+        {messages.map((m,i) => (
+          <div key={i} style={{ display:"flex", justifyContent: m.role==="user" ? "flex-end" : "flex-start" }}>
+            {m.role==="assistant" && (
+              <div style={{ width:32, height:32, borderRadius:"50%", background:`linear-gradient(135deg,${C.accent},${C.pink})`,
+                display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, marginRight:8, flexShrink:0, marginTop:4 }}>🤖</div>
+            )}
+            <div style={{
+              maxWidth:"78%", padding:"10px 14px", borderRadius: m.role==="user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+              background: m.role==="user" ? `linear-gradient(135deg,${C.accent},${C.accent2})` : C.card2,
+              border: m.role==="assistant" ? `1px solid ${C.border}` : "none",
+              color: C.text, fontSize:14, lineHeight:1.6,
+              whiteSpace:"pre-wrap",
+            }}>
+              {renderContent(m.content)}
+            </div>
+          </div>
+        ))}
+        {loading && (
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <div style={{ width:32, height:32, borderRadius:"50%", background:`linear-gradient(135deg,${C.accent},${C.pink})`,
+              display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>🤖</div>
+            <div style={{ background:C.card2, border:`1px solid ${C.border}`, borderRadius:"16px 16px 16px 4px", padding:"10px 14px" }}>
+              <div style={{ display:"flex", gap:4 }}>
+                {[0,1,2].map(i=>(
+                  <div key={i} style={{ width:6, height:6, borderRadius:"50%", background:C.accent,
+                    animation:`bounce .8s ease-in-out ${i*0.15}s infinite` }} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={endRef} />
+      </div>
+      <div style={{ display:"flex", gap:10, paddingTop:12, borderTop:`1px solid ${C.border}` }}>
+        <input
+          value={input} onChange={e=>setInput(e.target.value)}
+          onKeyDown={e=>e.key==="Enter" && send()}
+          placeholder="Ask Aria anything... 💡"
+          style={{ flex:1, background:C.card2, border:`1px solid ${C.border}`, borderRadius:12,
+            padding:"12px 16px", color:C.text, fontSize:14, outline:"none" }}
+        />
+        <button onClick={send} disabled={loading || !input.trim()} style={{
+          background:`linear-gradient(135deg,${C.accent},${C.accent2})`, border:"none", borderRadius:12,
+          padding:"0 20px", color:"#fff", fontSize:18, cursor:"pointer", opacity: (!input.trim()||loading) ? 0.5 : 1,
+        }}>➤</button>
+      </div>
+    </div>
+  );
+}
+
+// ── MCQ Practice ───────────────────────────────────────────────
+function PracticeScreen({ onXP }) {
+  const [idx, setIdx] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [showExp, setShowExp] = useState(false);
+  const [score, setScore] = useState(0);
+  const [confetti, setConfetti] = useState(false);
+  const [filterSub, setFilterSub] = useState("All");
+
+  const subjects = ["All", "Physics", "Chemistry", "Biology", "Mathematics"];
+  const pool = filterSub==="All" ? QUESTIONS : QUESTIONS.filter(q=>q.subject===filterSub);
+  const q = pool[idx % pool.length];
+  const isCorrect = selected === q.ans;
+
+  const pick = (i) => {
+    if(selected!==null) return;
+    setSelected(i);
+    setShowExp(true);
+    if(i===q.ans){ setScore(s=>s+1); onXP(10); setConfetti(true); setTimeout(()=>setConfetti(false),2200); }
+  };
+
+  const next = () => { setSelected(null); setShowExp(false); setIdx(i=>i+1); };
+
+  const optColor = (i) => {
+    if(selected===null) return C.card2;
+    if(i===q.ans) return "#064E3B";
+    if(i===selected && selected!==q.ans) return "#450A0A";
+    return C.card2;
+  };
+  const optBorder = (i) => {
+    if(selected===null) return C.border;
+    if(i===q.ans) return C.green;
+    if(i===selected && selected!==q.ans) return C.red;
+    return C.border;
+  };
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+      <Confetti active={confetti} />
+      <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+        {subjects.map(s=><Pill key={s} label={s} active={filterSub===s} onClick={()=>{setFilterSub(s);setIdx(0);setSelected(null);setShowExp(false);}} />)}
+      </div>
+
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        <span style={{ color:C.muted, fontSize:13 }}>Q{(idx%pool.length)+1} of {pool.length} • {q.subject}</span>
+        <span style={{ color:C.gold, fontSize:13, fontWeight:700 }}>Score: {score}</span>
+      </div>
+
+      <Card style={{ background:`linear-gradient(135deg,${C.card},${C.card2})` }}>
+        <div style={{ fontSize:14, lineHeight:1.7, color:C.text, fontWeight:500 }}>{q.q}</div>
+      </Card>
+
+      <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+        {q.opts.map((opt,i)=>(
+          <button key={i} onClick={()=>pick(i)} style={{
+            background:optColor(i), border:`1.5px solid ${optBorder(i)}`, borderRadius:12,
+            padding:"13px 16px", color:C.text, fontSize:14, textAlign:"left", cursor:"pointer",
+            display:"flex", alignItems:"center", gap:12, transition:"all .2s",
+          }}>
+            <span style={{ width:26, height:26, borderRadius:"50%", border:`1.5px solid ${optBorder(i)}`,
+              display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700,
+              background: selected!==null && (i===q.ans||(i===selected&&selected!==q.ans)) ? optBorder(i) : "transparent",
+              color: selected!==null && (i===q.ans||(i===selected&&selected!==q.ans)) ? "#fff" : C.muted,
+              flexShrink:0,
+            }}>
+              {selected!==null ? (i===q.ans ? "✓" : i===selected ? "✗" : "ABCD"[i]) : "ABCD"[i]}
+            </span>
+            {opt}
+          </button>
+        ))}
+      </div>
+
+      {showExp && (
+        <Card style={{ border:`1px solid ${isCorrect ? C.green : C.red}`,
+          background: isCorrect ? "rgba(16,185,129,.1)" : "rgba(239,68,68,.1)" }}>
+          <div style={{ fontSize:13, fontWeight:700, color: isCorrect ? C.green : C.red, marginBottom:6 }}>
+            {isCorrect ? "✅ Correct! +10 XP" : "❌ Incorrect"}
+          </div>
+          <div style={{ fontSize:13, color:C.muted, lineHeight:1.6 }}>💡 {q.exp}</div>
+        </Card>
+      )}
+
+      {selected !== null && (
+        <button onClick={next} style={{
+          background:`linear-gradient(135deg,${C.accent},${C.accent2})`, border:"none", borderRadius:14,
+          padding:"14px", color:"#fff", fontSize:15, fontWeight:700, cursor:"pointer",
+        }}>Next Question →</button>
+      )}
+    </div>
+  );
+}
+
+// ── Mock Test ─────────────────────────────────────────────────
+function MockTest({ onXP }) {
+  const [phase, setPhase] = useState("lobby"); // lobby | test | result
+  const [timeLeft, setTimeLeft] = useState(10*60);
+  const [answers, setAnswers] = useState({});
+  const [confetti, setConfetti] = useState(false);
+  const pool = QUESTIONS.slice(0, 8);
+
+  useEffect(() => {
+    if(phase!=="test") return;
+    const t = setInterval(()=>{
+      setTimeLeft(s=>{ if(s<=1){ clearInterval(t); setPhase("result"); return 0; } return s-1; });
+    },1000);
+    return ()=>clearInterval(t);
+  },[phase]);
+
+  const submit = () => { setPhase("result"); const sc = pool.filter(q=>answers[q.id]===q.ans).length; onXP(sc*15); if(sc>=5){setConfetti(true);setTimeout(()=>setConfetti(false),2500);} };
+
+  if(phase==="lobby") return (
+    <div style={{ display:"flex", flexDirection:"column", gap:20, alignItems:"center", paddingTop:20 }}>
+      <div style={{ fontSize:64 }}>🏆</div>
+      <div style={{ textAlign:"center" }}>
+        <div style={{ fontSize:22, fontWeight:800, color:C.text }}>Mock Test</div>
+        <div style={{ color:C.muted, marginTop:6, fontSize:14 }}>8 Questions • 10 Minutes • All Subjects</div>
+      </div>
+      <Card style={{ width:"100%", maxWidth:320 }}>
+        {[["📝","Questions","8"],["⏱","Time","10 min"],["⭐","XP Reward","Up to 120 XP"],["📊","Passing","5/8 correct"]].map(([e,l,v])=>(
+          <div key={l} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:`1px solid ${C.border}` }}>
+            <span style={{ color:C.muted, fontSize:14 }}>{e} {l}</span>
+            <span style={{ color:C.text, fontWeight:600, fontSize:14 }}>{v}</span>
+          </div>
+        ))}
+      </Card>
+      <button onClick={()=>setPhase("test")} style={{
+        background:`linear-gradient(135deg,${C.accent},${C.accent2})`, border:"none", borderRadius:16,
+        padding:"16px 48px", color:"#fff", fontSize:16, fontWeight:800, cursor:"pointer",
+        boxShadow:`0 8px 24px rgba(124,58,237,.4)`,
+      }}>Start Test 🚀</button>
+    </div>
+  );
+
+  if(phase==="result") {
+    const score = pool.filter(q=>answers[q.id]===q.ans).length;
+    const pct = Math.round(score/pool.length*100);
+    return (
+      <div style={{ display:"flex", flexDirection:"column", gap:16, alignItems:"center" }}>
+        <Confetti active={confetti} />
+        <div style={{ fontSize:56 }}>{pct>=62?"🏆":pct>=40?"📚":"💪"}</div>
+        <div style={{ textAlign:"center" }}>
+          <div style={{ fontSize:48, fontWeight:900, color: pct>=62?C.green:pct>=40?C.gold:C.red }}>{pct}%</div>
+          <div style={{ color:C.muted, fontSize:14, marginTop:4 }}>{score}/{pool.length} correct • +{score*15} XP earned</div>
+        </div>
+        <ProgressBar value={score} max={pool.length} color={pct>=62?C.green:pct>=40?C.gold:C.red} height={10} />
+        <Card style={{ width:"100%" }}>
+          <div style={{ fontSize:13, fontWeight:700, color:C.text, marginBottom:10 }}>Question Breakdown</div>
+          {pool.map(q=>(
+            <div key={q.id} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0",
+              borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
+              <span style={{ color:C.muted, maxWidth:"75%", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                {q.subject}: {q.q.slice(0,40)}…
+              </span>
+              <span>{answers[q.id]===q.ans ? "✅" : "❌"}</span>
+            </div>
+          ))}
+        </Card>
+        <button onClick={()=>{setPhase("lobby");setAnswers({});setTimeLeft(10*60);}} style={{
+          background:`linear-gradient(135deg,${C.accent},${C.accent2})`, border:"none", borderRadius:14,
+          padding:"14px 36px", color:"#fff", fontSize:15, fontWeight:700, cursor:"pointer",
+        }}>Try Again 🔄</button>
+      </div>
+    );
+  }
+
+  const mm = String(Math.floor(timeLeft/60)).padStart(2,"0");
+  const ss = String(timeLeft%60).padStart(2,"0");
+  const [qIdx, setQIdx] = useState(0);
+  const q = pool[qIdx];
+  const answered = Object.keys(answers).length;
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", background:C.card2,
+        padding:"10px 14px", borderRadius:12, border:`1px solid ${timeLeft<120 ? C.red : C.border}` }}>
+        <span style={{ fontSize:13, color:C.muted }}>Q{qIdx+1}/{pool.length}</span>
+        <span style={{ fontSize:18, fontWeight:800, color: timeLeft<120?C.red:C.text, fontFamily:"monospace" }}>⏱ {mm}:{ss}</span>
+        <span style={{ fontSize:13, color:C.muted }}>{answered} answered</span>
+      </div>
+
+      <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+        {pool.map((_,i)=>(
+          <button key={i} onClick={()=>setQIdx(i)} style={{
+            width:32, height:32, borderRadius:8, border:`1.5px solid ${
+              answers[pool[i].id]!==undefined ? C.green : qIdx===i ? C.accent : C.border}`,
+            background: answers[pool[i].id]!==undefined ? "rgba(16,185,129,.2)" : qIdx===i ? "rgba(124,58,237,.2)" : "transparent",
+            color:C.text, fontSize:12, fontWeight:700, cursor:"pointer",
+          }}>{i+1}</button>
+        ))}
+      </div>
+
+      <Card><div style={{ fontSize:14, lineHeight:1.7, color:C.text }}>{q.q}</div></Card>
+
+      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+        {q.opts.map((opt,i)=>(
+          <button key={i} onClick={()=>setAnswers(a=>({...a,[q.id]:i}))} style={{
+            background: answers[q.id]===i ? "rgba(124,58,237,.2)" : C.card2,
+            border:`1.5px solid ${answers[q.id]===i ? C.accent : C.border}`,
+            borderRadius:12, padding:"12px 14px", color:C.text, fontSize:14,
+            textAlign:"left", cursor:"pointer", display:"flex", gap:10, alignItems:"center",
+          }}>
+            <span style={{ color: answers[q.id]===i ? C.accent : C.muted, fontWeight:700, fontSize:12, width:18 }}>{"ABCD"[i]}</span>
+            {opt}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ display:"flex", gap:10 }}>
+        {qIdx>0 && <button onClick={()=>setQIdx(i=>i-1)} style={{ flex:1, background:C.card2, border:`1px solid ${C.border}`,
+          borderRadius:12, padding:12, color:C.text, cursor:"pointer", fontSize:14 }}>← Prev</button>}
+        {qIdx<pool.length-1
+          ? <button onClick={()=>setQIdx(i=>i+1)} style={{ flex:1, background:`linear-gradient(135deg,${C.accent},${C.accent2})`,
+              border:"none", borderRadius:12, padding:12, color:"#fff", cursor:"pointer", fontSize:14, fontWeight:700 }}>Next →</button>
+          : <button onClick={submit} style={{ flex:1, background:`linear-gradient(135deg,${C.green},${"#34D399"})`,
+              border:"none", borderRadius:12, padding:12, color:"#fff", cursor:"pointer", fontSize:14, fontWeight:700 }}>Submit ✓</button>
+        }
+      </div>
+    </div>
+  );
+}
+
+// ── Formula Bank ───────────────────────────────────────────────
+function FormulaBank() {
+  const [filterSub, setFilterSub] = useState("All");
+  const subjects = ["All","Physics","Chemistry","Mathematics","Biology"];
+  const list = filterSub==="All" ? FORMULAS : FORMULAS.filter(f=>f.subject===filterSub);
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+      <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+        {subjects.map(s=><Pill key={s} label={s} active={filterSub===s} onClick={()=>setFilterSub(s)} />)}
+      </div>
+      {list.map((f,i)=>{
+        const meta = subjectMeta[f.subject];
+        return (
+          <Card key={i} style={{ borderLeft:`3px solid`, borderLeftColor: meta.physics?.a || C.accent }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+              <div>
+                <div style={{ fontSize:13, color:C.muted, marginBottom:4 }}>{meta.emoji} {f.subject} — {f.name}</div>
+                <div style={{ fontSize:20, fontWeight:800, color:C.text, fontFamily:"monospace",
+                  background:C.bg, padding:"6px 12px", borderRadius:8, display:"inline-block", marginBottom:6 }}>
+                  {f.formula}
+                </div>
+                <div style={{ fontSize:13, color:C.muted }}>{f.desc}</div>
+              </div>
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Subject Screen ─────────────────────────────────────────────
+function SubjectScreen({ subject, onBack, onXP }) {
+  const meta = subjectMeta[subject];
+  const [activeTab, setActiveTab] = useState("topics");
+  const subQ = QUESTIONS.filter(q=>q.subject===subject);
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+      <div style={{ borderRadius:16, padding:"24px 20px", background:meta.grad, marginBottom:4,
+        position:"relative", overflow:"hidden" }}>
+        <div style={{ position:"absolute", right:16, top:12, fontSize:64, opacity:.3 }}>{meta.emoji}</div>
+        <button onClick={onBack} style={{ background:"rgba(255,255,255,.2)", border:"none", borderRadius:8,
+          padding:"4px 10px", color:"#fff", cursor:"pointer", fontSize:12, marginBottom:12 }}>← Back</button>
+        <div style={{ fontSize:24, fontWeight:900, color:"#fff" }}>{meta.emoji} {subject}</div>
+        <div style={{ fontSize:13, color:"rgba(255,255,255,.8)", marginTop:4 }}>{meta.topics.length} chapters</div>
+      </div>
+
+      <div style={{ display:"flex", gap:8 }}>
+        {["topics","practice"].map(t=><Pill key={t} label={t==="topics"?"📚 Topics":"🎯 Practice"} active={activeTab===t} onClick={()=>setActiveTab(t)} />)}
+      </div>
+
+      {activeTab==="topics" ? (
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          {meta.topics.map((topic,i)=>(
+            <Card key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div>
+                <div style={{ fontSize:14, fontWeight:700, color:C.text }}>{topic}</div>
+                <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>Tap to explore lessons</div>
+              </div>
+              <div style={{ width:36, height:36, borderRadius:10, background:meta.grad,
+                display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>
+                {["📖","🔬","⚡","🌊","🔭","💡"][i % 6]}
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <PracticeScreen onXP={onXP} />
+      )}
+    </div>
+  );
+}
+
+// ── Home Screen ────────────────────────────────────────────────
+function HomeScreen({ user, onSubject }) {
+  const subjects = ["Physics","Chemistry","Biology","Mathematics"];
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
+      {/* Hero */}
+      <div style={{ background:`linear-gradient(135deg,${C.accent},${C.accent2})`, borderRadius:20,
+        padding:"20px", position:"relative", overflow:"hidden" }}>
+        <div style={{ position:"absolute", right:-10, top:-10, fontSize:80, opacity:.2 }}>🚀</div>
+        <div style={{ fontSize:14, color:"rgba(255,255,255,.8)" }}>Good {new Date().getHours()<12?"morning":"afternoon"} 👋</div>
+        <div style={{ fontSize:22, fontWeight:900, color:"#fff", marginTop:2 }}>{user.name}</div>
+        <div style={{ display:"flex", gap:16, marginTop:14 }}>
+          <div style={{ background:"rgba(255,255,255,.15)", borderRadius:12, padding:"10px 14px" }}>
+            <div style={{ fontSize:20, fontWeight:900, color:"#fff" }}>🔥 {user.streak}</div>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,.8)" }}>Day Streak</div>
+          </div>
+          <div style={{ background:"rgba(255,255,255,.15)", borderRadius:12, padding:"10px 14px" }}>
+            <div style={{ fontSize:20, fontWeight:900, color:"#fff" }}>⭐ {user.xp}</div>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,.8)" }}>Total XP</div>
+          </div>
+          <div style={{ background:"rgba(255,255,255,.15)", borderRadius:12, padding:"10px 14px" }}>
+            <div style={{ fontSize:20, fontWeight:900, color:"#fff" }}>🏅 {user.level}</div>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,.8)" }}>Level</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Daily Goal */}
+      <Card>
+        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
+          <span style={{ fontSize:14, fontWeight:700, color:C.text }}>🎯 Daily Goal</span>
+          <span style={{ fontSize:13, color:C.muted }}>{user.dailyXP}/50 XP</span>
+        </div>
+        <ProgressBar value={user.dailyXP} max={50} color={C.gold} height={10} />
+        <div style={{ fontSize:12, color:C.muted, marginTop:8 }}>
+          {user.dailyXP>=50 ? "🎉 Goal achieved! Keep going!" : `${50-user.dailyXP} XP to hit today's goal`}
+        </div>
+      </Card>
+
+      {/* Subjects */}
+      <div>
+        <div style={{ fontSize:16, fontWeight:800, color:C.text, marginBottom:12 }}>📚 Subjects</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+          {subjects.map(sub=>{
+            const m = subjectMeta[sub];
+            return (
+              <button key={sub} onClick={()=>onSubject(sub)} style={{
+                background:m.grad, border:"none", borderRadius:16, padding:"18px 14px",
+                cursor:"pointer", textAlign:"left", position:"relative", overflow:"hidden",
+                transition:"transform .15s", boxShadow:`0 4px 16px rgba(0,0,0,.3)`,
+              }}
+                onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.03)";}}
+                onMouseLeave={e=>{e.currentTarget.style.transform="";}}
+              >
+                <div style={{ position:"absolute", right:8, bottom:4, fontSize:36, opacity:.25 }}>{m.emoji}</div>
+                <div style={{ fontSize:28, marginBottom:6 }}>{m.emoji}</div>
+                <div style={{ fontSize:14, fontWeight:800, color:"#fff" }}>{sub}</div>
+                <div style={{ fontSize:11, color:"rgba(255,255,255,.75)", marginTop:2 }}>{m.topics.length} chapters</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Quick Quiz Prompt */}
+      <Card style={{ background:`linear-gradient(135deg,rgba(245,158,11,.15),rgba(251,191,36,.05))`,
+        border:`1px solid rgba(245,158,11,.3)` }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+          <span style={{ fontSize:32 }}>⚡</span>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:14, fontWeight:700, color:C.text }}>Quick 5-min Quiz</div>
+            <div style={{ fontSize:12, color:C.muted }}>Boost your streak • Earn 50 XP</div>
+          </div>
+          <div style={{ background:C.gold, borderRadius:10, padding:"6px 12px",
+            fontSize:12, fontWeight:700, color:"#000" }}>Go!</div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ── Profile Screen ─────────────────────────────────────────────
+function ProfileScreen({ user }) {
+  const badges = [
+    { e:"🔥", name:"7-Day Streak", unlocked:user.streak>=7 },
+    { e:"⭐", name:"100 XP Club", unlocked:user.xp>=100 },
+    { e:"🏆", name:"Mock Master", unlocked:false },
+    { e:"💡", name:"Doubt Buster", unlocked:false },
+    { e:"🧠", name:"Quiz Wizard", unlocked:false },
+    { e:"🚀", name:"Top 10%", unlocked:false },
+  ];
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+      <div style={{ textAlign:"center", padding:"24px 0 16px" }}>
+        <div style={{ width:72, height:72, borderRadius:"50%",
+          background:`linear-gradient(135deg,${C.accent},${C.pink})`,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:32, margin:"0 auto 12px", boxShadow:`0 4px 20px rgba(124,58,237,.4)` }}>
+          {user.avatar}
+        </div>
+        <div style={{ fontSize:20, fontWeight:800, color:C.text }}>{user.name}</div>
+        <div style={{ fontSize:13, color:C.muted, marginTop:4 }}>Level {user.level} • {user.examMode} Aspirant</div>
+        <XPBadge xp={user.xp} />
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+        {[["🔥",user.streak,"Streak"],["⭐",user.xp,"Total XP"],["✅",user.correct,"Correct"]].map(([e,v,l])=>(
+          <Card key={l} style={{ textAlign:"center", padding:"14px 8px" }}>
+            <div style={{ fontSize:20 }}>{e}</div>
+            <div style={{ fontSize:22, fontWeight:900, color:C.text, marginTop:4 }}>{v}</div>
+            <div style={{ fontSize:11, color:C.muted }}>{l}</div>
+          </Card>
+        ))}
+      </div>
+
+      <div>
+        <div style={{ fontSize:15, fontWeight:700, color:C.text, marginBottom:10 }}>🏅 Badges</div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+          {badges.map((b,i)=>(
+            <div key={i} style={{ background: b.unlocked ? C.card2 : "rgba(255,255,255,.03)",
+              border:`1.5px solid ${b.unlocked ? C.gold : C.border}`, borderRadius:14,
+              padding:"12px 8px", textAlign:"center", opacity: b.unlocked ? 1 : 0.5 }}>
+              <div style={{ fontSize:24, filter: b.unlocked ? "none" : "grayscale(1)" }}>{b.e}</div>
+              <div style={{ fontSize:10, color: b.unlocked ? C.gold : C.dim, marginTop:4, fontWeight:600 }}>{b.name}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Card>
+        <div style={{ fontSize:14, fontWeight:700, color:C.text, marginBottom:12 }}>📊 XP Progress to Level {user.level+1}</div>
+        <ProgressBar value={user.xp % 200} max={200} color={C.accent} height={10} />
+        <div style={{ fontSize:12, color:C.muted, marginTop:8 }}>{user.xp % 200}/200 XP</div>
+      </Card>
+
+      <Card>
+        <div style={{ fontSize:14, fontWeight:700, color:C.text, marginBottom:10 }}>🏆 Leaderboard (Today)</div>
+        {[{n:"Rahul K.",x:320},{n:user.name,x:user.xp},{n:"Priya S.",x:180},{n:"Aryan M.",x:150}]
+          .sort((a,b)=>b.x-a.x).map((p,i)=>(
+          <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0",
+            borderBottom:`1px solid ${C.border}`, background: p.n===user.name?"rgba(124,58,237,.08)":"transparent",
+            borderRadius:8, paddingLeft:8 }}>
+            <span style={{ fontSize:16, width:24, textAlign:"center" }}>{["🥇","🥈","🥉","4️⃣"][i]}</span>
+            <span style={{ flex:1, fontSize:14, color: p.n===user.name?C.accent:C.text, fontWeight: p.n===user.name?700:400 }}>{p.n}</span>
+            <XPBadge xp={p.x} />
+          </div>
+        ))}
+      </Card>
+    </div>
+  );
+}
+
+// ── Main App ───────────────────────────────────────────────────
+function App() {
+  const [tab, setTab] = useState("home");
+  const [practiceTab, setPracticeTab] = useState("mcq"); // mcq | mock | formulas
+  const [subject, setSubject] = useState(null);
+  const [user, setUser] = useState({
+    name:"Arjun Sharma", avatar:"👨‍🎓", level:4, xp:340, streak:5,
+    dailyXP:20, examMode:"NEET", correct:47,
+  });
+
+  const addXP = (amt) => {
+    setUser(u=>({ ...u, xp:u.xp+amt, dailyXP:Math.min(50, u.dailyXP+Math.floor(amt/2)),
+      level: Math.floor((u.xp+amt)/200)+1 }));
+  };
+
+  const tabs = [
+    { id:"home", label:"Home", icon:"🏠" },
+    { id:"practice", label:"Practice", icon:"⚡" },
+    { id:"doubt", label:"Aria AI", icon:"🤖" },
+    { id:"profile", label:"Profile", icon:"👤" },
+  ];
+
+  const renderContent = () => {
+    if(subject) return <SubjectScreen subject={subject} onBack={()=>setSubject(null)} onXP={addXP} />;
+    if(tab==="home") return <HomeScreen user={user} onSubject={setSubject} />;
+    if(tab==="practice") return (
+      <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+        <div style={{ display:"flex", gap:8 }}>
+          {[["mcq","🎯 MCQ"],["mock","🏆 Mock Test"],["formulas","📐 Formulas"]].map(([id,label])=>(
+            <Pill key={id} label={label} active={practiceTab===id} onClick={()=>setPracticeTab(id)} />
+          ))}
+        </div>
+        {practiceTab==="mcq" && <PracticeScreen onXP={addXP} />}
+        {practiceTab==="mock" && <MockTest onXP={addXP} />}
+        {practiceTab==="formulas" && <FormulaBank />}
+      </div>
+    );
+    if(tab==="doubt") return (
+      <div style={{ display:"flex", flexDirection:"column", height:"calc(100vh - 200px)" }}>
+        <div style={{ marginBottom:12 }}>
+          <div style={{ fontSize:18, fontWeight:800, color:C.text }}>🤖 Aria AI Tutor</div>
+          <div style={{ fontSize:13, color:C.muted }}>Ask anything • Powered by Claude</div>
+        </div>
+        <div style={{ flex:1, overflow:"hidden" }}>
+          <AIDoubtSolver />
+        </div>
+      </div>
+    );
+    if(tab==="profile") return <ProfileScreen user={user} />;
+  };
+
+  return (
+    <div style={{ background:C.bg, minHeight:"100vh", fontFamily:"'Inter','Segoe UI',sans-serif",
+      color:C.text, maxWidth:430, margin:"0 auto", position:"relative", display:"flex", flexDirection:"column" }}>
+
+      {/* Header */}
+      <div style={{ padding:"16px 20px 8px", background:C.bg, position:"sticky", top:0, zIndex:10,
+        borderBottom:`1px solid ${C.border}` }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+          <div>
+            <div style={{ fontSize:18, fontWeight:900, background:`linear-gradient(135deg,${C.accent},${C.accent2})`,
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+              PrepAI
+            </div>
+            <div style={{ fontSize:11, color:C.muted }}>{user.examMode} Mode</div>
+          </div>
+          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+            <div style={{ background:`rgba(239,68,68,.15)`, border:`1px solid rgba(239,68,68,.3)`,
+              borderRadius:10, padding:"4px 10px", fontSize:13, fontWeight:700, color:C.red }}>
+              🔥 {user.streak}
+            </div>
+            <XPBadge xp={user.xp} />
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ flex:1, padding:"16px 20px 100px", overflowY:"auto" }}>
+        {renderContent()}
+      </div>
+
+      {/* Bottom Nav */}
+      <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:430,
+        background:`rgba(13,15,26,.95)`, backdropFilter:"blur(16px)", borderTop:`1px solid ${C.border}`,
+        display:"flex", zIndex:20 }}>
+        {tabs.map(t=>(
+          <button key={t.id} onClick={()=>{ setTab(t.id); setSubject(null); }} style={{
+            flex:1, display:"flex", flexDirection:"column", alignItems:"center",
+            padding:"10px 0 14px", background:"transparent", border:"none", cursor:"pointer",
+            borderTop: tab===t.id ? `2px solid ${C.accent}` : "2px solid transparent",
+            transition:"all .2s",
+          }}>
+            <span style={{ fontSize:20, filter: tab!==t.id ? "grayscale(0.8)" : "none",
+              transform: tab===t.id ? "scale(1.15)" : "scale(1)", transition:"transform .2s",
+              display:"block", marginBottom:3 }}>{t.icon}</span>
+            <span style={{ fontSize:10, color: tab===t.id ? C.accent : C.dim, fontWeight: tab===t.id ? 700 : 400 }}>{t.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <style>{`
+        * { box-sizing: border-box; }
+        ::-webkit-scrollbar { width:4px; }
+        ::-webkit-scrollbar-track { background:transparent; }
+        ::-webkit-scrollbar-thumb { background:${C.border}; border-radius:4px; }
+        @keyframes bounce { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }
+        input::placeholder { color:${C.dim}; }
+      `}</style>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>
